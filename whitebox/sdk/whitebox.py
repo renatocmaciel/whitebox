@@ -5,12 +5,13 @@ from whitebox.schemas.model import ModelCreateDto, ModelType, ModelUpdateDto
 from typing import Dict, Optional, Union
 import requests
 import logging
-from fastapi import status
+from fastapi import status as status_code
 from fastapi.encoders import jsonable_encoder
 
 from whitebox.schemas.modelMonitor import (
     AlertSeverity,
     ModelMonitorCreateDto,
+    ModelMonitorUpdateDto,
     MonitorMetrics,
     MonitorStatus,
 )
@@ -41,6 +42,7 @@ class Whitebox:
         name: str,
         type: ModelType,
         target_column: str,
+        granularity: str,
         labels: Dict[str, int] = None,
         description: str = "",
     ) -> dict:
@@ -49,10 +51,11 @@ class Whitebox:
         """
         new_model = ModelCreateDto(
             name=name,
-            description=description,
             type=type,
-            labels=labels,
             target_column=target_column,
+            granularity=granularity,
+            labels=labels,
+            description=description,
         )
 
         result = requests.post(
@@ -72,7 +75,7 @@ class Whitebox:
             url=f"{self.host}/{self.api_version}/models/{model_id}",
             headers={"api-key": self.api_key},
         )
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()
@@ -85,23 +88,31 @@ class Whitebox:
             url=f"{self.host}/{self.api_version}/models",
             headers={"api-key": self.api_key},
         )
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()
 
-    def update_model(self, model_id: str, body: ModelUpdateDto):
+    def update_model(
+        self,
+        model_id: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ):
         """
         Updates a model by its id. If any error occurs, returns False.
         """
+
+        model = ModelUpdateDto(name=name, description=description)
+
         result = requests.put(
             url=f"{self.host}/{self.api_version}/models/{model_id}",
-            json=body,
+            json=jsonable_encoder(model),
             headers={"api-key": self.api_key},
         )
         logger.info(result.json())
 
-        if result.status_code == status.HTTP_200_OK:
+        if result.status_code == status_code.HTTP_200_OK:
             return True
 
         return False
@@ -115,7 +126,7 @@ class Whitebox:
             headers={"api-key": self.api_key},
         )
 
-        if result.status_code == status.HTTP_200_OK:
+        if result.status_code == status_code.HTTP_200_OK:
             return True
 
         return False
@@ -148,7 +159,7 @@ class Whitebox:
             headers={"api-key": self.api_key},
             json=dataset_rows,
         )
-        if result.status_code == status.HTTP_201_CREATED:
+        if result.status_code == status_code.HTTP_201_CREATED:
             return True
 
         return False
@@ -195,7 +206,7 @@ class Whitebox:
             headers={"api-key": self.api_key},
             json=inference_rows,
         )
-        if result.status_code == status.HTTP_201_CREATED:
+        if result.status_code == status_code.HTTP_201_CREATED:
             return True
 
         return False
@@ -209,7 +220,7 @@ class Whitebox:
             url=f"{self.host}/{self.api_version}/inference-rows?model_id={model_id}",
             headers={"api-key": self.api_key},
         )
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()
@@ -223,7 +234,7 @@ class Whitebox:
             url=f"{self.host}/{self.api_version}/inference-rows/{inference_row_id}/xai",
             headers={"api-key": self.api_key},
         )
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()
@@ -263,7 +274,7 @@ class Whitebox:
         logger.info(result.json())
         return result.json()
 
-    def get_monitors(self, model_id: str) -> dict:
+    def get_model_monitors(self, model_id: str) -> dict:
         """
         Returns all monitors for a model.
         """
@@ -275,6 +286,54 @@ class Whitebox:
         logger.info(result.json())
         return result.json()
 
+    def update_model_monitor(
+        self,
+        model_monitor_id: str,
+        name: Optional[str] = None,
+        status: Optional[MonitorStatus] = None,
+        severity: Optional[AlertSeverity] = None,
+        email: Optional[str] = None,
+        lower_threshold: Optional[float] = None,
+    ):
+        """
+        Updates a model monitor by its id. If any error occurs, returns False.
+        """
+
+        model_monitor = ModelMonitorUpdateDto(
+            name=name,
+            status=status,
+            severity=severity,
+            lower_threshold=lower_threshold,
+            email=email,
+        )
+
+        result = requests.put(
+            url=f"{self.host}/{self.api_version}/model-monitors/{model_monitor_id}",
+            json=jsonable_encoder(model_monitor),
+            headers={"api-key": self.api_key},
+        )
+
+        logger.info(result.json())
+
+        if result.status_code == status_code.HTTP_200_OK:
+            return True
+
+        return False
+
+    def delete_model_monitor(self, model_monitor_id: str):
+        """
+        Deletes a model monitor by its id. If any error occurs, returns False.
+        """
+        result = requests.delete(
+            url=f"{self.host}/{self.api_version}/model-monitors/{model_monitor_id}",
+            headers={"api-key": self.api_key},
+        )
+
+        if result.status_code == status_code.HTTP_200_OK:
+            return True
+
+        return False
+
     def get_alerts(self, model_id: str = "") -> dict:
         """
         Returns all alerts for a model.
@@ -284,7 +343,7 @@ class Whitebox:
             headers={"api-key": self.api_key},
         )
 
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()
@@ -298,7 +357,7 @@ class Whitebox:
             url=f"{self.host}/{self.api_version}/drifting-metrics?model_id={model_id}",
             headers={"api-key": self.api_key},
         )
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()
@@ -312,7 +371,7 @@ class Whitebox:
             url=f"{self.host}/{self.api_version}/model-integrity-metrics?model_id={model_id}",
             headers={"api-key": self.api_key},
         )
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()
@@ -326,7 +385,7 @@ class Whitebox:
             url=f"{self.host}/{self.api_version}/performance-metrics?model_id={model_id}",
             headers={"api-key": self.api_key},
         )
-        if result.status_code == status.HTTP_404_NOT_FOUND:
+        if result.status_code == status_code.HTTP_404_NOT_FOUND:
             return None
 
         return result.json()

@@ -15,6 +15,7 @@ class ModelBase(BaseModel):
     description: str
     type: ModelType
     target_column: str
+    granularity: str
     labels: Optional[Dict[str, int]]
 
 
@@ -29,4 +30,3 @@ class ModelCreateDto(ModelBase):
 class ModelUpdateDto(BaseModel):
     name: Optional[str]
     description: Optional[str]
-    type: Optional[ModelType]

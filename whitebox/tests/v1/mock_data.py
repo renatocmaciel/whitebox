@@ -2,7 +2,6 @@ from datetime import datetime
 from whitebox.schemas.model import ModelType
 from sklearn.datasets import load_breast_cancer, load_wine, load_diabetes
 import pandas as pd
-import random
 from copy import deepcopy
 
 from whitebox.schemas.modelMonitor import AlertSeverity, MonitorMetrics, MonitorStatus
@@ -10,35 +9,39 @@ from whitebox.schemas.modelMonitor import AlertSeverity, MonitorMetrics, Monitor
 user_create_payload = dict(username="admin")
 
 model_binary_create_payload = dict(
-    name="Model 1",
-    description="Model 1 description",
+    name="Model Binary",
+    description="Model description",
     type=ModelType.binary,
     labels={"label_1": 0, "label_2": 1},
     target_column="target",
+    granularity="1D",
 )
 
 model_multi_create_payload = dict(
-    name="Model 2",
+    name="Model 1 Multi",
+    description="Model 1 description",
+    type=ModelType.multi_class,
+    labels={"label_1": 0, "label_2": 1, "label_3": 2},
+    target_column="target",
+    granularity="15T",
+)
+
+model_multi_2_create_payload = dict(
+    name="Model 2 Multi",
     description="Model 2 description",
     type=ModelType.multi_class,
     labels={"label_1": 0, "label_2": 1, "label_3": 2},
     target_column="target",
+    granularity="2H",
 )
 
-model_multi_2_create_payload = dict(
+model_multi_3_create_payload = dict(
     name="Model 3",
     description="Model 3 description",
     type=ModelType.multi_class,
     labels={"label_1": 0, "label_2": 1, "label_3": 2},
     target_column="target",
-)
-
-model_multi_3_create_payload = dict(
-    name="Model 4",
-    description="Model 4 description",
-    type=ModelType.multi_class,
-    labels={"label_1": 0, "label_2": 1, "label_3": 2},
-    target_column="target",
+    granularity="1W",
 )
 
 model_regression_create_payload = dict(
@@ -46,11 +49,12 @@ model_regression_create_payload = dict(
     description="Regression Model description",
     type=ModelType.regression,
     target_column="target",
+    granularity="1D",
 )
 
 model_update_payload = dict(
-    name="Model 1 - categorical",
-    description="Model 1 description",
+    name="Model 2 - categorical",
+    description="Model 2 description updated",
 )
 
 # dataset rows data for both binary and multiclass models
@@ -136,7 +140,7 @@ dict_multi_inferences = df_multi_inference.to_dict(orient="records")
 multi_actuals = [0, 2, 0, 1, 2, 1, 1, 2, 0, 1]
 inference_row_create_many_multi_payload = [
     {
-        "timestamp": str(datetime.now()),
+        "timestamp": str(datetime(2023, 3, 6, 12, 13, 25)),
         "processed": x,
         "nonprocessed": x,
         "actual": multi_actuals[i],
@@ -162,7 +166,7 @@ dict_binary_inferences = df_binary_inference.to_dict(orient="records")
 binary_actuals = [0, 1, 1, 0, 1, 0, 1, 1, 1, 0]
 inference_row_create_many_binary_payload = [
     {
-        "timestamp": str(datetime.now()),
+        "timestamp": str(datetime(2023, 3, 6, 12, 13, 25)),
         "processed": x,
         "nonprocessed": x,
         "actual": binary_actuals[i],
@@ -175,7 +179,7 @@ dict_reg_inferences = df_reg_inference.to_dict(orient="records")
 reg_actuals = [103, 20, 50, 64, 48, 198, 105, 138, 250, 57]
 inference_row_create_many_reg_payload = [
     {
-        "timestamp": str(datetime.now()),
+        "timestamp": str(datetime(2023, 3, 6, 12, 13, 25)),
         "processed": x,
         "nonprocessed": x,
         "actual": reg_actuals[i],
@@ -187,7 +191,7 @@ timestamps = pd.Series(["2022-12-22T12:13:27.879738"] * 10)
 mixed_actuals = pd.Series([0, 1, None, 1, 0, None, None, 1, 0, None])
 
 model_monitor_accuracy_create_payload = dict(
-    name="accuracy monitor ",
+    name="accuracy monitor",
     status=MonitorStatus.active,
     metric=MonitorMetrics.accuracy,
     lower_threshold=0.85,
@@ -238,6 +242,45 @@ model_monitor_r_square_create_payload = dict(
     lower_threshold=0.85,
     severity=AlertSeverity.low,
     email="example@whitebox.io",
+)
+
+model_monitor_no_threshold_create_payload = dict(
+    name="no threshold monitor",
+    status=MonitorStatus.active,
+    metric=MonitorMetrics.r_square,
+    severity=AlertSeverity.low,
+    email="example@whitebox.io",
+)
+
+model_monitor_no_feature_create_payload = dict(
+    name="no feature monitor",
+    status=MonitorStatus.active,
+    metric=MonitorMetrics.data_drift,
+    severity=AlertSeverity.low,
+    email="example@whitebox.io",
+)
+
+model_monitor_feature_same_as_target_create_payload = dict(
+    name="feature same as target monitor",
+    status=MonitorStatus.active,
+    metric=MonitorMetrics.data_drift,
+    feature="target",
+    severity=AlertSeverity.low,
+    email="example@whitebox.io",
+)
+
+model_monitor_feature_not_in_columns_create_payload = dict(
+    name="feature not in columns monitor",
+    status=MonitorStatus.active,
+    metric=MonitorMetrics.data_drift,
+    feature="not_a_column",
+    severity=AlertSeverity.low,
+    email="example@whitebox.io",
+)
+
+
+model_monitor_update_payload = dict(
+    name="concept drift monitor updated", lower_threshold=0.54
 )
 
 alert_payload = {

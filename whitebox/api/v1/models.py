@@ -28,6 +28,24 @@ async def create_model(
 ) -> Model:
     """Inserts a model into the database"""
 
+    granularity = body.granularity
+
+    try:
+        granularity_amount = float(granularity[:-1])
+    except ValueError:
+        return errors.bad_request("Granularity amount that was given is not a number!")
+
+    if not granularity_amount.is_integer():
+        return errors.bad_request(
+            "Granularity amount should be an integer and not a float (e.g. 1D)!"
+        )
+
+    granularity_type = granularity[-1]
+    if granularity_type not in ["T", "H", "D", "W"]:
+        return errors.bad_request(
+            "Wrong granularity type. Accepted values: T (minutes), H (hours), D (days), W (weeks)"
+        )
+
     new_model = crud.models.create(db=db, obj_in=body)
     return new_model
 
@@ -88,19 +106,22 @@ async def update_model(
 ) -> Model:
     """Updates record of the model with the specified id"""
 
+    # Remove all unset properties (with None values) from the update object
+    filtered_body = {k: v for k, v in dict(body).items() if v is not None}
+
     model = crud.models.get(db=db, _id=model_id)
 
     if not model:
         return errors.not_found("Model not found")
 
-    return crud.models.update(db=db, db_obj=model, obj_in=body)
+    return crud.models.update(db=db, db_obj=model, obj_in=filtered_body)
 
 
 @models_router.delete(
     "/models/{model_id}",
     tags=["Models"],
     response_model=StatusCode,
-    summary="Delete user",
+    summary="Delete model",
     status_code=status.HTTP_200_OK,
     responses=add_error_responses([401, 404]),
 )
