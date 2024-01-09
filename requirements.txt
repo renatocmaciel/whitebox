@@ -23,7 +23,7 @@ evidently==0.2.4
 exceptiongroup==1.1.0
 fastapi==0.90.1
 filelock==3.9.0
-fonttools==4.38.0
+fonttools==4.43.0
 ghp-import==2.1.0
 h11==0.14.0
 httpcore==0.16.3
