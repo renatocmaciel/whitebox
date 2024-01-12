@@ -91,7 +91,7 @@ SQLAlchemy==1.4.46
 stack-data==0.5.1
 starlette==0.23.1
 statsmodels==0.13.5
-streamlit==1.18.1
+streamlit==1.30.0
 tenacity==8.2.1
 threadpoolctl==3.1.0
 tifffile==2023.2.3
