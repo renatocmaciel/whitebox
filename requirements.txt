@@ -21,7 +21,7 @@ distlib==0.3.6
 docopt==0.6.2
 evidently==0.2.4
 exceptiongroup==1.1.0
-fastapi==0.90.1
+fastapi==0.109.1
 filelock==3.9.0
 fonttools==4.38.0
 ghp-import==2.1.0
